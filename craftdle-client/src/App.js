@@ -69,12 +69,14 @@ function App() {
   const [ volume, setVolume ] = React.useState( parseInt(localStorage.getItem('volume')) || 50 );
   
   const position = useMousePosition();
-  const [play_portal] = useSound( portail_du_nether, { sprite: { play: [0, 8000] }, volume: ((volume / 100)/50),  } );
-  const [play] = useSound( button_sound, { sprite: { play: [200, 500] }, volume: (volume / 100),  } );
+  // const [play_portal] = useSound( portail_du_nether, { sprite: { play: [0, 8000] }, volume: ((volume / 100)/50)  } );
+  const [play] = useSound( button_sound, { sprite: { play: [200, 500] }, volume: (volume / 100)  } );
   const [play_damage] = useSound( damage_sound, { volume: ((volume / 100)/10) } );
   const [play_success_sound] = useSound( Bow_Ding, { volume: (volume / 100) } );
   
   React.useEffect(() => {
+
+    console.log('volume: ', volume);
 
     let craftingArray = [];
     for(let i = 0; i < 9; i++) {
@@ -89,13 +91,13 @@ function App() {
 
     const localGameResume = JSON.parse(localStorage.getItem('gameResume'));
 
-    fetch('http://localhost:5000/recipes')
+    fetch('https://crafteadle.herokuapp.com/recipes')
     .then(res => res.json())
     .then( async data => {
       
-      console.log('data: ', data);
-      console.log('localGameResume: ', localGameResume );
-      console.log('same recipe? : ', localGameResume.dayRecipeName === data.result.item );
+      // console.log('data: ', data);
+      // console.log('localGameResume: ', localGameResume );
+      // console.log('same recipe? : ', localGameResume?.dayRecipeName , data.result.item );
       if( localGameResume && localGameResume.dayRecipeName === data.result.item ) {
         setGameResume( localGameResume );
 
@@ -104,7 +106,7 @@ function App() {
         setDayRecipe(data);
 
       } else {
-        console.log("no local resume or different recipe");
+        // console.log("no local resume or different recipe");
         let recipeIcon = await getItemIcon( data.result.item );
         data.icon = recipeIcon;
         setDayRecipe(data);
@@ -124,7 +126,7 @@ function App() {
 
     
     
-    fetch('http://localhost:5000/randomInventory')
+    fetch('https://crafteadle.herokuapp.com/randomInventory')
     .then(res => res.json())
     .then(data => {
       let parsedData = [];
@@ -175,10 +177,10 @@ function App() {
   } , [gameResume]);
 
   const handlePlayButton = () => {
-    console.log( "gameOver: ", gameResume );
+    // console.log( "gameOver: ", gameResume );
     play({id: 'play'}); 
     setLoading(true); 
-    play_portal({id: 'play'});
+    // play_portal({id: 'play'});
     setTimeout(() => {
       //check if the game is over or not
       if( gameResume.gameOver ){
@@ -188,6 +190,25 @@ function App() {
       }
       setLoading(false);
     }, 4000);
+  }
+
+  const handleVolumeDecrease = () => {
+    try {
+      play({id: 'play'});
+      if(volume >= 10) setVolume( pValue => pValue - 10 ) ;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  const handleVolumeIncrease = () => {
+    try {
+      play({id: 'play'});
+      if(volume <= 90) {
+        setVolume( (pValue) => (pValue + 10) )
+      } ;
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
 
@@ -583,32 +604,36 @@ function App() {
             className="py-0 text-3xl minecraft-btn mx-auto w-64 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200">Play Crafteadle</button>
             
             <button
-            onClick={() => { play({id: 'play'}); setBackground('performance'); }}
+            onClick={() => { 
+              play({id: 'play'});
+              setBackground('performance'); }}
             style={{transform: "translate(-50%, -50%)"}}
                 className={`absolute top-[50%] left-[68%] md:left-[56%] py-0 text-3xl minecraft-btn mx-auto w-36 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200 ${background === "performance" ? "opacity-50" : ""}`}>
               Performance
             </button>
             <button
-              onClick={() => { play({id: 'play'}); setBackground('quality'); }}
+              onClick={() => { 
+                play({id: 'play'});
+                setBackground('quality'); }}
               style={{transform: "translate(-50%, -50%)"}}
               className={`absolute top-[50%] left-[33%] md:left-[44%] py-0 text-3xl minecraft-btn mx-auto w-36 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200 ${background === "quality" ? "opacity-50" : ""}`}>
               Quality
             </button>
             <div className="relative top-[60%]">            
               <button
-                onClick={() => { play({id: 'play'}); volume >= 10 && setVolume( prevValue => prevValue - 10 ); }}
+                onClick={() => { handleVolumeDecrease();}}
                 style={{transform: "translate(-50%, -50%)"}} 
                 className="absolute top-[60%] left-[25%] md:left-[43%] py-0 text-3xl minecraft-btn mx-auto w-10 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200">
                 <ImVolumeDecrease />
               </button>
                 <button
-                  onClick={() => { play({id: 'play'}) }}
+                  // onClick={() => { play({id: 'play'}) }}
                   style={{transform: "translate(-50%, -50%)"}}
                   className="absolute top-[60%] left-[50%] md:left-[%] py-0 text-3xl minecraft-btn mx-auto w-24 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200">
                   {volume}
                 </button>
               <button
-                onClick={() => { play({id: 'play'}); volume <= 90 && setVolume( prevValue => prevValue + 10 ); }}
+                onClick={() => { handleVolumeIncrease();}}
                 style={{transform: "translate(-50%, -50%)"}}
                 className="absolute top-[60%] left-[75%] md:left-[57%] py-0 text-3xl minecraft-btn mx-auto w-10 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200">
                 <ImVolumeIncrease />
@@ -642,7 +667,7 @@ function App() {
               onClick={() => { 
                 play({id: 'play'});
                 setLoading(true); 
-                play_portal({id: 'play'});
+                // play_portal({id: 'play'});
                 setTimeout(() => {
                   setMenuUI('main');
                   setLoading(false);
@@ -675,7 +700,7 @@ function App() {
                   </div>
                 <div style={{paddingTop: "35px", /*margin: "35px 25px" */ }} className="">
                   <button
-                    onClick={(e) => { play({id: 'play'}); handleCraftingButton(e); }}
+                    onClick={(e) => {handleCraftingButton(e); }}
                     style={{ height: "50px", width: "50px", /* transform: "translate(-50%, -50%)" */ }}
                     className="py-0 text-4xl minecraft-btn mx-auto w-10 text-center text-white truncate p-1 border-2 border-b-4 hover:text-yellow-200">
                       <FaHammer />

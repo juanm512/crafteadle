@@ -2,6 +2,8 @@
 
 # data files are in the data directory
 /recipes
+itemsShearcher.js
+
 
 # dependencies
 /node_modules

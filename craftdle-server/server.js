@@ -7,20 +7,26 @@ import dotenv from 'dotenv';
 
 dotenv.config()
 
+const recipeOfTheDayData = fs.readFileSync('./recipeOfTheDay.json');
+const randomInventoryData = fs.readFileSync('./randomInventory.json');
+const recipeOfTheDayParsed = JSON.parse(recipeOfTheDayData.toString());
+const randomInventoryParsed = JSON.parse(randomInventoryData.toString());
+
 const recipesData = fs.readFileSync('./output.json');
 const itemsData = fs.readFileSync('./items.json');
 const recipes = JSON.parse(recipesData.toString());
 const items = JSON.parse(itemsData.toString());
 
-let recipeOfTheDay ;
-let randomInventory = [];
+// let recipeOfTheDay = {};
+// let randomInventory = [];
 
 // nodeSchedule.scheduleJob('0 0 * * *', function(){
-nodeSchedule.scheduleJob('0/5 * * * *', function(){
-    recipeOfTheDay = recipes[Math.floor(Math.random() * recipes.length)];
+nodeSchedule.scheduleJob('0 0/12 * * *', function(){
+// nodeSchedule.scheduleJob('0/1 * * * *', function(){
+    let recipeOfTheDay = recipes[Math.floor(Math.random() * recipes.length)];
     console.log(recipeOfTheDay);
     
-    randomInventory = [];
+    let randomInventory = [];
 
     Object.entries(recipeOfTheDay.key).forEach(ingredients => {
       ( randomInventory.indexOf(ingredients[1].item) === -1 && ingredients[1].item ) && randomInventory.push(ingredients[1].item);
@@ -60,19 +66,33 @@ nodeSchedule.scheduleJob('0/5 * * * *', function(){
     Object.entries(randomMaterials.key).forEach(ingredients => {
       ( randomInventory.indexOf(ingredients[1].item) === -1 && ingredients[1].item ) && randomInventory.push(ingredients[1].item);
     });
-
-    // randomMaterials = recipes[Math.floor(Math.random() * recipes.length)];
-    // Object.entries(randomMaterials.key).forEach(ingredients => {
-    //   ( randomInventory.indexOf(ingredients[1].item) === -1 && ingredients[1].item ) && randomInventory.push(ingredients[1].item);
-    // });
-    
-    // randomMaterials = recipes[Math.floor(Math.random() * recipes.length)];
-    // Object.entries(randomMaterials.key).forEach(ingredients => {
-    //   ( randomInventory.indexOf(ingredients[1].item) === -1 && ingredients[1].item ) && randomInventory.push(ingredients[1].item);
-    // });
     
 
     console.log(randomInventory);
+    
+    // stringify JSON Object
+    var recipeOfTheDayJsonContent = JSON.stringify(recipeOfTheDay);
+    
+    fs.writeFile("recipeOfTheDay.json", recipeOfTheDayJsonContent, 'utf8', function (err) {
+      if (err) {
+        console.log("An error occured while writing JSON Object to File.");
+        return console.log(err);
+      }
+      
+      console.log("JSON file has been saved.");
+    });
+
+    var randomInventoryJsonContent = JSON.stringify(randomInventory);
+    fs.writeFile("randomInventory.json", randomInventoryJsonContent, 'utf8', function (err) {
+        if (err) {
+            console.log("An error occured while writing JSON Object to File.");
+            return console.log(err);
+        }
+    
+        console.log("JSON file has been saved.");
+    });
+
+
 
 } );
 
@@ -92,7 +112,7 @@ app.get('/recipes', (req, res) => {
   console.log("==========================");
   try {
     res.json({
-      ...recipeOfTheDay, 
+      ...recipeOfTheDayParsed, 
       // image: items.find(ingredients => ingredients.name === recipeOfTheDay.result.item).image 
     });
   } catch (error) {
@@ -101,13 +121,13 @@ app.get('/recipes', (req, res) => {
 }
 );
 app.get('/randomInventory', (req, res) => {
-  console.log("==========================\n", randomInventory);
+  console.log("==========================\n", randomInventoryParsed);
 
   let inv = [];
 
-  console.log(items.find(item => item.name === randomInventory[0]));
+  console.log(items.find(item => item.name === randomInventoryParsed[0]));
 
-  randomInventory.forEach(item => {
+  randomInventoryParsed.forEach(item => {
     inv.push(items[items.findIndex(ingredients => ingredients.name === item)]);
   });
 
@@ -120,11 +140,11 @@ app.get('/randomInventory', (req, res) => {
 app.get("/", (req, res) => {
   res.send(`
     <h1>CRAFTEADLE SERVER</h1>
+    <a href="${process.env.FRONTEND_LINK}">Go there ${process.env.FRONTEND_LINK}</a>
     `);
-    // <a href="${process.env.FRONTEND_LINK}">Go there ${process.env.FRONTEND_LINK}</a>
 });
 
-app.listen(5000, () => {
+app.listen( process.env.PORT || 5000, () => {
     console.log('Server started on port 5000');
 });
 
